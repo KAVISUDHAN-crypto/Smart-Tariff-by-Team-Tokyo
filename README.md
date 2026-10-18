@@ -46,8 +46,8 @@ The sensors average the ADC readings, so they measure DC. Calibrate the zero off
 
 ## Setup on the Raspberry Pi
 
-    git clone https://github.com/KAVISUDHAN-crypto/smart-home-energy-optimizer.git
-    cd smart-home-energy-optimizer
+    git clone https://github.com/KAVISUDHAN-crypto/Smart-Tariff-by-Team-Tokyo.git
+    cd Smart-Tariff-by-Team-Tokyo
     pip install -r requirements.txt
     python3 app.py
 
