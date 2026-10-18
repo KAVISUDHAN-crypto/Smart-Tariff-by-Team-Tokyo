@@ -95,6 +95,3 @@ Flask, pyserial, scikit-learn, pandas, numpy, joblib and the Arduino core.
 ## Team
 
 Team Tokyo, INFINIX'26, Dr. NGP Institute of Technology.
-EOF
-git add README.md
-git commit -m "Add README"
