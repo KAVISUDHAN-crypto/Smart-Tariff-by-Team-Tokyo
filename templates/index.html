@@ -1,0 +1,617 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Tariff</title>
+
+<style>
+:root {
+  color-scheme: dark;
+  --bg:#0b1220;
+  --panel:#131e30;
+  --inner:#17253a;
+  --text:#edf4ff;
+  --muted:#9aacc4;
+  --line:#263751;
+  --green:#55d6a7;
+  --blue:#77b8ff;
+  --red:#ff7777;
+  --shadow:0 8px 24px #0002;
+}
+html[data-theme="light"] {
+  color-scheme:light;
+  --bg:#f2f6fc;
+  --panel:#ffffff;
+  --inner:#edf3fa;
+  --text:#182438;
+  --muted:#5f6e82;
+  --line:#d4deeb;
+  --green:#087e59;
+  --blue:#1767b1;
+  --red:#c83232;
+  --shadow:0 8px 24px #1c365010;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  transition:background .2s,color .2s;
+}
+button,input,select { font:inherit; }
+button {
+  cursor:pointer;
+  color:var(--text);
+  background:var(--inner);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:10px 14px;
+}
+button:hover { filter:brightness(1.06); }
+button:focus-visible,input:focus-visible,select:focus-visible {
+  outline:2px solid var(--blue);
+  outline-offset:2px;
+}
+button:disabled { opacity:.5;cursor:not-allowed; }
+button.primary {
+  background:var(--green);
+  color:#06251a;
+  border-color:transparent;
+  font-weight:750;
+}
+.wrap { width:min(1180px,calc(100% - 32px));margin:auto;padding:25px 0 45px; }
+header {
+  display:flex;justify-content:space-between;align-items:center;
+  gap:16px;flex-wrap:wrap;margin-bottom:22px;
+}
+.brand { display:flex;align-items:center;gap:12px; }
+.logo {
+  width:48px;height:48px;border-radius:14px;
+  display:grid;place-items:center;
+  background:var(--green);color:#06251a;
+  font-size:24px;font-weight:900;
+}
+h1 { margin:0;font-size:clamp(24px,4vw,34px);letter-spacing:-.04em; }
+h2 { margin:0 0 16px;font-size:18px; }
+.subtitle { margin:5px 0 0;color:var(--muted);font-size:13px; }
+.header-actions { display:flex;gap:10px;align-items:center;flex-wrap:wrap; }
+.pill {
+  display:inline-flex;align-items:center;gap:8px;
+  padding:9px 12px;border:1px solid var(--line);
+  border-radius:30px;color:var(--muted);font-size:12px;
+}
+.dot { width:8px;height:8px;border-radius:50%;background:#e8ae50; }
+.dot.live { background:var(--green); }
+.grid { display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px; }
+.card {
+  min-width:0;background:var(--panel);border:1px solid var(--line);
+  border-radius:17px;padding:20px;box-shadow:var(--shadow);
+}
+.span-12 { grid-column:span 12; }
+.span-6 { grid-column:span 6; }
+.span-4 { grid-column:span 4; }
+.metrics { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px; }
+.metric { background:var(--inner);padding:15px;border-radius:12px;min-width:0; }
+.label { color:var(--muted);font-size:12px;margin-bottom:8px; }
+.value {
+  font-size:clamp(18px,2.5vw,27px);font-weight:800;
+  letter-spacing:-.03em;overflow-wrap:anywhere;
+}
+.green { color:var(--green); }
+.muted { color:var(--muted); }
+.load-head {
+  display:flex;justify-content:space-between;align-items:center;
+  gap:12px;margin-bottom:16px;
+}
+.load-name { font-size:19px;font-weight:800; }
+.status { color:var(--muted);font-size:12px;margin-top:5px; }
+.status.on { color:var(--green); }
+.switch {
+  width:64px;height:36px;border-radius:30px;
+  padding:4px;background:#42516a;border:0;flex-shrink:0;
+}
+.switch span {
+  display:block;width:28px;height:28px;border-radius:50%;
+  background:white;transition:transform .18s;
+}
+.switch[aria-checked="true"] { background:var(--green); }
+.switch[aria-checked="true"] span { transform:translateX(28px); }
+.readings { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px; }
+.reading { background:var(--inner);border:1px solid var(--line);padding:13px;border-radius:12px;min-width:0; }
+.reading .value { font-size:20px; }
+.actions { display:flex;gap:10px;flex-wrap:wrap;margin-top:14px; }
+input,select {
+  background:var(--inner);color:var(--text);
+  border:1px solid var(--line);border-radius:9px;padding:10px;
+  max-width:100%;
+}
+input[type="number"] { width:125px; }
+.form-line { display:flex;align-items:center;gap:10px;flex-wrap:wrap; }
+.form-line label { color:var(--muted);font-size:13px; }
+.notice { color:var(--muted);font-size:12px;line-height:1.5; }
+#message,#timerMessage { min-height:18px;font-size:13px; }
+.timer-controls {
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;align-items:end;
+}
+.timer-controls label { display:grid;gap:7px;color:var(--muted);font-size:12px; }
+.timer-controls input,.timer-controls select { width:100%;min-width:0; }
+.timer-cards { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px; }
+.schedule-row {
+  display:grid;grid-template-columns:100px 1fr 1fr 1.3fr;
+  align-items:center;gap:10px;background:var(--inner);
+  padding:12px;border-radius:11px;margin-bottom:10px;
+}
+.schedule-row label { color:var(--muted);font-size:12px; }
+.schedule-row input[type="time"] { display:block;width:100%;margin-top:5px; }
+.checks { display:flex;gap:12px;flex-wrap:wrap; }
+.check { display:flex!important;align-items:center;gap:6px; }
+.check input { accent-color:var(--green); }
+footer { color:var(--muted);font-size:12px;text-align:center;margin-top:20px; }
+@media(max-width:800px) {
+  .span-6,.span-4 { grid-column:span 12; }
+  .metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:560px) {
+  .wrap { width:calc(100% - 20px);padding-top:15px; }
+  .card { padding:15px; }
+  .timer-controls,.timer-cards { grid-template-columns:1fr; }
+  .schedule-row { grid-template-columns:1fr 1fr; }
+  .schedule-row .period-title { grid-column:span 2; }
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <div class="logo">W</div>
+    <div>
+      <h1>Smart Tariff</h1>
+      <p class="subtitle">by Team Tokyo</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="pill"><span id="connDot" class="dot"></span><span id="conn">CONNECTING</span></div>
+    <div class="pill" id="clock">--:--:--</div>
+    <button id="themeToggle" type="button">☀️ Light mode</button>
+  </div>
+</header>
+
+<main class="grid">
+
+<section class="card span-12">
+  <h2>Live Energy Overview</h2>
+  <div class="metrics">
+    <div class="metric"><div class="label">Combined Power</div><div class="value" id="totalPower">0.0 W</div></div>
+    <div class="metric"><div class="label">Combined Energy</div><div class="value" id="totalEnergy">0.000 Wh</div></div>
+    <div class="metric"><div class="label">Estimated Cost</div><div class="value green" id="estimatedCost">₹0.000000</div></div>
+    <div class="metric"><div class="label">Active Loads</div><div class="value" id="activeLoads">0 / 2</div></div>
+  </div>
+</section>
+
+<section class="card span-6">
+  <div class="load-head">
+    <div><div class="load-name">Load 1 · Fan</div><div id="status1" class="status">Waiting for readings</div></div>
+    <button id="switch1" class="switch" type="button" role="switch" aria-checked="false" aria-label="Toggle light relay"><span></span></button>
+  </div>
+  <div class="readings">
+    <div class="reading"><div class="label">Voltage</div><div class="value" id="voltageRead1">0.0 V</div></div>
+    <div class="reading"><div class="label">Current</div><div class="value" id="currentRead1">0.000 A</div></div>
+    <div class="reading"><div class="label">Power</div><div class="value" id="powerRead1">0.0 W</div></div>
+    <div class="reading"><div class="label">Energy</div><div class="value" id="energyRead1">0.000 Wh</div></div>
+  </div>
+  <p>Estimated cost: <strong class="green" id="costRead1">₹0.000000</strong></p>
+</section>
+
+<section class="card span-6">
+  <div class="load-head">
+    <div><div class="load-name">Load 2 · Light</div><div id="status2" class="status">Waiting for readings</div></div>
+    <button id="switch2" class="switch" type="button" role="switch" aria-checked="false" aria-label="Toggle fan relay"><span></span></button>
+  </div>
+  <div class="readings">
+    <div class="reading"><div class="label">Voltage</div><div class="value" id="voltageRead2">0.0 V</div></div>
+    <div class="reading"><div class="label">Current</div><div class="value" id="currentRead2">0.000 A</div></div>
+    <div class="reading"><div class="label">Power</div><div class="value" id="powerRead2">0.0 W</div></div>
+    <div class="reading"><div class="label">Energy</div><div class="value" id="energyRead2">0.000 Wh</div></div>
+  </div>
+  <p>Estimated cost: <strong class="green" id="costRead2">₹0.000000</strong></p>
+</section>
+
+<section class="card span-6">
+  <h2>Tariff & Cost Comparison</h2>
+  <div class="form-line">
+    <label for="tariff">Tariff (₹/kWh)</label>
+    <input id="tariff" type="number" min="0" step="0.01" value="8">
+    <button id="saveTariff" class="primary" type="button">Apply</button>
+  </div>
+  <div class="metrics" style="margin-top:14px">
+    <div class="metric"><div class="label">Baseline Power*</div><div class="value" id="withoutPower">0.0 W</div></div>
+    <div class="metric"><div class="label">Baseline Cost*</div><div class="value" id="withoutCost">₹0.000000</div><div class="label" id="withoutEnergy">0.000 Wh</div></div>
+    <div class="metric"><div class="label">Optimized Power</div><div class="value" id="withPower">0.0 W</div></div>
+    <div class="metric"><div class="label">Optimized Cost</div><div class="value green" id="withCost">₹0.000000</div><div class="label" id="withEnergy">0.000 Wh</div></div>
+  </div>
+  <p id="savingsSummary" class="notice">Energy difference: 0.000 Wh · Cost difference: ₹0.000000</p>
+  <p class="notice">*Baseline is an estimate unless the backend provides independent baseline readings. Cost = Wh × tariff ÷ 1000.</p>
+</section>
+
+<section class="card span-6">
+  <h2>Automation Control</h2>
+  <p class="muted">Automation is executed by the Raspberry Pi backend.</p>
+  <div class="pill">Automation status: <strong id="automationState">OFF</strong></div>
+  <div class="actions">
+    <button id="autoOn" class="primary" type="button">Enable automation</button>
+    <button id="autoOff" type="button">Disable automation</button>
+    <button id="resetEnergy" type="button">Reset energy</button>
+  </div>
+  <p id="message" aria-live="polite"></p>
+</section>
+
+<section class="card span-12">
+  <h2>Load Countdown Timers</h2>
+  <p class="notice">The Raspberry Pi backend runs the timer, so it can still fire if the browser closes. A backend restart clears in-memory timers.</p>
+  <div class="timer-controls">
+    <label>Load
+      <select id="timerLoad">
+        <option value="1">Load 1 · Fan</option>
+        <option value="2">Load 2 · Light</option>
+      </select>
+    </label>
+    <label>Action at expiry
+      <select id="timerAction">
+        <option value="OFF">Turn OFF</option>
+        <option value="ON">Turn ON</option>
+      </select>
+    </label>
+    <label>Duration (minutes)
+      <input id="timerMinutes" type="number" min="1" max="1440" value="30">
+    </label>
+  </div>
+  <div class="actions">
+    <button id="startTimer" class="primary" type="button">Start timer</button>
+    <button id="cancelTimer" type="button">Cancel selected timer</button>
+  </div>
+  <div class="timer-cards">
+    <div class="metric"><div class="label">Light timer</div><div class="value" id="timerDisplay1">No timer</div></div>
+    <div class="metric"><div class="label">Fan timer</div><div class="value" id="timerDisplay2">No timer</div></div>
+  </div>
+  <p id="timerMessage" class="notice" aria-live="polite"></p>
+</section>
+
+<section class="card span-12">
+  <h2>Daily Schedule</h2>
+  <p class="notice">Choose start/end times and the relay states for each period. Saving requires compatible Flask schedule handling.</p>
+  <div id="scheduleList"></div>
+  <button id="saveSchedule" class="primary" type="button">Save schedule</button>
+</section>
+
+</main>
+<footer>WattWise AI · Raspberry Pi + Arduino · Verify sensor calibration and electrical safety.</footer>
+</div>
+
+<script>
+(() => {
+  const byId = id => document.getElementById(id);
+  let data = {};
+  let auto = false;
+  let rate = 8;
+
+  let schedules = [
+    {start:"06:00",end:"10:00",load1:false,load2:true},
+    {start:"10:00",end:"16:00",load1:false,load2:false},
+    {start:"16:00",end:"18:00",load1:false,load2:true},
+    {start:"18:00",end:"22:00",load1:false,load2:false}
+  ];
+
+  const money = n => "₹" + Number(n || 0).toFixed(6);
+
+  function showMessage(text,error=false) {
+    byId("message").textContent = text;
+    byId("message").style.color = error ? "var(--red)" : "var(--blue)";
+  }
+
+  async function api(url,options={}) {
+    const response = await fetch(url,{
+      ...options,
+      headers:{"Content-Type":"application/json",...(options.headers || {})}
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || result.ok === false) {
+      throw new Error(result.error || `Request failed (${response.status})`);
+    }
+    return result;
+  }
+
+  function normalizeLoads(result) {
+    const loads = result.loads || result.data || {};
+    const out = {};
+    for (const id of [1,2]) {
+      const s = loads[id] || loads[String(id)] || {};
+      out[id] = {
+        online:Boolean(s.online),
+        relay:Boolean(s.relay ?? s.on),
+        v:Number(s.v ?? s.voltage ?? 0),
+        i:Number(s.i ?? s.current ?? 0),
+        p:Number(s.p ?? s.power ?? 0),
+        wh:Number(s.wh ?? s.energy_wh ?? 0),
+        onp:s.onp,
+        bwh:s.bwh
+      };
+    }
+    return out;
+  }
+
+  function render() {
+    let totalPower=0,totalEnergy=0,active=0,onlineAny=false;
+    let baselinePower=0,baselineEnergy=0;
+
+    for (const id of [1,2]) {
+      const s=data[id] || {};
+      const online=Boolean(s.online);
+      const on=Boolean(s.relay);
+      const v=online ? Number(s.v || 0) : 0;
+      const i=online ? Number(s.i || 0) : 0;
+      const p=online ? Number(s.p || 0) : 0;
+      const wh=Math.max(0,Number(s.wh || 0));
+
+      totalPower+=p;
+      totalEnergy+=wh;
+      if (online) onlineAny=true;
+      if (online && on) active++;
+
+      baselinePower+=Math.max(0,Number(s.onp ?? s.baseline_power ?? s.p ?? 0));
+      baselineEnergy+=Math.max(0,Number(s.bwh ?? s.baseline_wh ?? s.wh ?? 0));
+
+      byId("switch"+id).setAttribute("aria-checked",String(on));
+      byId("switch"+id).disabled=!online;
+      byId("status"+id).textContent=!online
+        ? "OFFLINE · No recent data"
+        : (on ? "ON · Live readings" : "OFF · Ready");
+      byId("status"+id).classList.toggle("on",on);
+      byId("voltageRead"+id).textContent=v.toFixed(1)+" V";
+      byId("currentRead"+id).textContent=i.toFixed(3)+" A";
+      byId("powerRead"+id).textContent=p.toFixed(1)+" W";
+      byId("energyRead"+id).textContent=wh.toFixed(3)+" Wh";
+      byId("costRead"+id).textContent=money(wh*rate/1000);
+    }
+
+    const baselineCost=baselineEnergy*rate/1000;
+    const optimizedCost=totalEnergy*rate/1000;
+    const energyDifference=baselineEnergy-totalEnergy;
+    const costDifference=baselineCost-optimizedCost;
+
+    byId("conn").textContent=onlineAny ? "LIVE · ARDUINO" : "WAITING FOR ARDUINO";
+    byId("connDot").classList.toggle("live",onlineAny);
+    byId("activeLoads").textContent=active+" / 2";
+    byId("totalPower").textContent=totalPower.toFixed(1)+" W";
+    byId("totalEnergy").textContent=totalEnergy.toFixed(3)+" Wh";
+    byId("estimatedCost").textContent=money(optimizedCost);
+
+    byId("withoutPower").textContent=baselinePower.toFixed(1)+" W";
+    byId("withoutEnergy").textContent=baselineEnergy.toFixed(3)+" Wh";
+    byId("withoutCost").textContent=money(baselineCost);
+    byId("withPower").textContent=totalPower.toFixed(1)+" W";
+    byId("withEnergy").textContent=totalEnergy.toFixed(3)+" Wh";
+    byId("withCost").textContent=money(optimizedCost);
+    byId("savingsSummary").textContent=
+      "Energy difference: "+energyDifference.toFixed(3)+
+      " Wh · Cost difference: "+money(costDifference);
+
+    byId("automationState").textContent=auto ? "ON" : "OFF";
+    byId("autoOn").disabled=auto;
+    byId("autoOff").disabled=!auto;
+  }
+
+  async function refresh() {
+    try {
+      const result=await api("/api/status");
+      data=normalizeLoads(result);
+      auto=Boolean(result.automation);
+      byId("clock").textContent=result.clock || new Date().toLocaleTimeString();
+      render();
+    } catch(error) {
+      byId("conn").textContent="BACKEND UNAVAILABLE";
+      byId("connDot").classList.remove("live");
+      showMessage("Cannot read /api/status: "+error.message,true);
+    }
+  }
+
+  async function send(load,on) {
+    try {
+      await api("/api/relay",{
+        method:"POST",
+        body:JSON.stringify({load:load,state:on ? "ON" : "OFF"})
+      });
+      showMessage("Relay command sent to load "+load+".");
+      await refresh();
+    } catch(error) {
+      showMessage("Relay command failed: "+error.message,true);
+    }
+  }
+
+  byId("switch1").addEventListener("click",() =>
+    send(1,byId("switch1").getAttribute("aria-checked")!=="true"));
+  byId("switch2").addEventListener("click",() =>
+    send(2,byId("switch2").getAttribute("aria-checked")!=="true"));
+
+  byId("saveTariff").addEventListener("click",() => {
+    const value=Number(byId("tariff").value);
+    if (!Number.isFinite(value) || value<0) {
+      showMessage("Enter a valid non-negative tariff.",true);
+      return;
+    }
+    rate=value;
+    render();
+    showMessage("Tariff set to ₹"+rate.toFixed(2)+" per kWh.");
+  });
+
+  async function setAutomation(enabled) {
+    try {
+      await api("/api/auto",{
+        method:"POST",
+        body:JSON.stringify({enabled:enabled})
+      });
+      auto=enabled;
+      render();
+      showMessage("Automation "+(enabled ? "enabled." : "disabled."));
+    } catch(error) {
+      showMessage("Automation request failed: "+error.message,true);
+    }
+  }
+  byId("autoOn").addEventListener("click",() => setAutomation(true));
+  byId("autoOff").addEventListener("click",() => setAutomation(false));
+
+  byId("resetEnergy").addEventListener("click",async () => {
+    if (!confirm("Reset accumulated energy readings?")) return;
+    try {
+      await api("/api/reset",{method:"POST",body:JSON.stringify({})});
+      showMessage("Reset request sent.");
+      await refresh();
+    } catch(error) {
+      showMessage("Reset failed: "+error.message,true);
+    }
+  });
+
+  // Theme toggle. Preference is saved locally in this browser.
+  const themeButton=byId("themeToggle");
+  let currentTheme="dark";
+  try {
+    currentTheme=localStorage.getItem("wattwise-theme") || "dark";
+  } catch(error) {}
+  function applyTheme(theme) {
+    document.documentElement.dataset.theme=theme;
+    themeButton.textContent=theme==="dark" ? "☀️ Light mode" : "🌙 Dark mode";
+    themeButton.setAttribute("aria-pressed",String(theme==="light"));
+  }
+  applyTheme(currentTheme);
+  themeButton.addEventListener("click",() => {
+    currentTheme=document.documentElement.dataset.theme==="dark" ? "light" : "dark";
+    applyTheme(currentTheme);
+    try { localStorage.setItem("wattwise-theme",currentTheme); } catch(error) {}
+  });
+
+  // Backend-managed countdown timers
+  function formatRemaining(seconds) {
+    const n=Math.max(0,Number(seconds)||0);
+    const h=Math.floor(n/3600);
+    const m=Math.floor((n%3600)/60);
+    const s=n%60;
+    return [h,m,s].map(x=>String(x).padStart(2,"0")).join(":");
+  }
+
+  async function refreshTimers() {
+    try {
+      const result=await api("/api/timer");
+      const timers=result.timers || {};
+      for (const load of [1,2]) {
+        const t=timers[String(load)];
+        byId("timerDisplay"+load).textContent=t
+          ? formatRemaining(t.remaining)+" → "+t.action
+          : "No timer";
+      }
+    } catch(error) {
+      byId("timerMessage").textContent="Timer API unavailable: "+error.message;
+    }
+  }
+
+  byId("startTimer").addEventListener("click",async () => {
+    const load=Number(byId("timerLoad").value);
+    const action=byId("timerAction").value;
+    const minutes=Number(byId("timerMinutes").value);
+
+    if (!Number.isFinite(minutes)||minutes<1||minutes>1440) {
+      byId("timerMessage").textContent="Choose 1–1440 minutes.";
+      return;
+    }
+    try {
+      await api("/api/timer",{
+        method:"POST",
+        body:JSON.stringify({load:load,action:action,minutes:minutes})
+      });
+      byId("timerMessage").textContent="Timer started for Load "+load+".";
+      await refreshTimers();
+    } catch(error) {
+      byId("timerMessage").textContent="Could not start timer: "+error.message;
+    }
+  });
+
+  byId("cancelTimer").addEventListener("click",async () => {
+    const load=Number(byId("timerLoad").value);
+    try {
+      await api("/api/timer?load="+load,{method:"DELETE"});
+      byId("timerMessage").textContent="Timer cancelled for Load "+load+".";
+      await refreshTimers();
+    } catch(error) {
+      byId("timerMessage").textContent="Could not cancel timer: "+error.message;
+    }
+  });
+
+  // Schedule editor
+  function renderSchedule() {
+    const list=byId("scheduleList");
+    list.replaceChildren();
+
+    schedules.forEach((period,index) => {
+      const row=document.createElement("div");
+      row.className="schedule-row";
+
+      const title=document.createElement("strong");
+      title.className="period-title";
+      title.textContent="Period "+(index+1);
+      row.appendChild(title);
+
+      for (const field of ["start","end"]) {
+        const label=document.createElement("label");
+        label.textContent=(field==="start" ? "Start" : "End");
+        const input=document.createElement("input");
+        input.type="time";
+        input.value=period[field];
+        input.addEventListener("change",() => period[field]=input.value);
+        label.appendChild(input);
+        row.appendChild(label);
+      }
+
+      const checks=document.createElement("div");
+      checks.className="checks";
+
+      for (const [field,name] of [["load1","Light"],["load2","Fan"]]) {
+        const label=document.createElement("label");
+        label.className="check";
+        const input=document.createElement("input");
+        input.type="checkbox";
+        input.checked=Boolean(period[field]);
+        input.addEventListener("change",() => period[field]=input.checked);
+        label.append(input,document.createTextNode(name));
+        checks.appendChild(label);
+      }
+      row.appendChild(checks);
+      list.appendChild(row);
+    });
+  }
+
+  byId("saveSchedule").addEventListener("click",async () => {
+    try {
+      await api("/api/schedule",{
+        method:"POST",
+        body:JSON.stringify({schedule:schedules,periods:schedules})
+      });
+      showMessage("Schedule saved.");
+    } catch(error) {
+      showMessage("Schedule save failed: "+error.message,true);
+    }
+  });
+
+  renderSchedule();
+  refresh();
+  refreshTimers();
+  setInterval(refresh,2000);
+  setInterval(refreshTimers,1000);
+})();
+</script>
+</body>
+</html>

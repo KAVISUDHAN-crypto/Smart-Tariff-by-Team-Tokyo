@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+app_t2.py
+live_log.csv
+sensor_dataset.csv
+periods.json
+appliances.json
+venv/
+.env
+*.bak
+*.log
